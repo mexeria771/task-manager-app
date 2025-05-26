@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD タスクマネージャー</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <meta name="description" content="ADHD傾向のある方にも使いやすい直感的なタスク管理アプリ">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div>
+                <h1 class="app-title">📋 ADHD タスクマネージャー</h1>
+                <p class="app-subtitle">集中力を維持しつつ、効率的にタスクを管理</p>
+            </div>
+            
+            <div class="header-controls">
+                <button class="btn btn-primary" id="new-task-btn">
+                    ➕ 新しいタスク
+                </button>
+                <button class="btn btn-secondary" id="focus-toggle-btn">
+                    🎯 フォーカスモード
+                </button>
+                <button class="btn btn-warning" id="export-btn">
+                    📤 エクスポート
+                </button>
+                <button class="btn btn-success" id="import-btn">
+                    📥 インポート
+                </button>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- Today セクション -->
+            <section class="section-card" id="today-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">🌅</span>
+                        Today
+                    </h2>
+                    <div>
+                        <button class="btn btn-small btn-primary" id="add-to-today-btn">
+                            ➕ 追加
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content">
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="today-search" placeholder="今日のタスクを検索...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    
+                    <div id="today-tasks" class="task-list-container">
+                        <!-- Today タスクがここに表示されます -->
+                    </div>
+                    
+                    <div class="empty-state" id="today-empty" style="display: none;">
+                        <div class="empty-state-icon">☀️</div>
+                        <div class="empty-state-text">今日のタスクはありません</div>
+                        <button class="btn btn-primary" onclick="document.getElementById('add-to-today-btn').click()">
+                            最初のタスクを追加
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 割り込みタスク セクション -->
+            <section class="section-card" id="interruption-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">⚡</span>
+                        割り込みタスク
+                    </h2>
+                    <div>
+                        <button class="btn btn-small btn-warning" id="add-interruption-btn">
+                            ⚡ 追加
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content">
+                    <div class="quick-add-container" style="margin-bottom: 15px;">
+                        <input type="text" class="form-input" id="quick-interruption-input" 
+                               placeholder="割り込みタスクを素早く追加..." 
+                               onkeypress="if(event.key==='Enter') QuickAdd.addInterruption()">
+                        <button class="btn btn-small btn-warning mt-1" onclick="QuickAdd.addInterruption()">
+                            追加
+                        </button>
+                    </div>
+                    
+                    <div id="interruption-tasks" class="task-list-container">
+                        <!-- 割り込みタスクがここに表示されます -->
+                    </div>
+                    
+                    <div class="empty-state" id="interruption-empty" style="display: none;">
+                        <div class="empty-state-icon">⚡</div>
+                        <div class="empty-state-text">割り込みタスクはありません</div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 10px;">
+                            突発的なタスクはここに素早く記録しましょう
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DBビュー セクション -->
+            <section class="section-card" id="db-view-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">📊</span>
+                        全タスク管理
+                    </h2>
+                    <div>
+                        <button class="btn btn-small btn-secondary" id="filter-toggle-btn">
+                            🔍 フィルター
+                        </button>
+                        <button class="btn btn-small btn-primary" id="new-main-task-btn">
+                            ➕ メインタスク
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content">
+                    <!-- フィルター -->
+                    <div class="filter-container" id="filter-container" style="display: none;">
+                        <div class="filter-group">
+                            <label class="filter-label">ステータス</label>
+                            <select class="filter-select" id="status-filter">
+                                <option value="">全て</option>
+                                <option value="pending">未着手</option>
+                                <option value="in_progress">進行中</option>
+                                <option value="completed">完了</option>
+                                <option value="cancelled">キャンセル</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">優先度</label>
+                            <select class="filter-select" id="priority-filter">
+                                <option value="">全て</option>
+                                <option value="5">最高</option>
+                                <option value="4">高</option>
+                                <option value="3">普通</option>
+                                <option value="2">低</option>
+                                <option value="1">最低</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">カテゴリ</label>
+                            <select class="filter-select" id="category-filter">
+                                <option value="">全て</option>
+                                <option value="work">仕事</option>
+                                <option value="personal">個人</option>
+                                <option value="urgent">緊急</option>
+                                <option value="project">プロジェクト</option>
+                                <option value="learning">学習</option>
+                                <option value="health">健康</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">並び順</label>
+                            <select class="filter-select" id="sort-filter">
+                                <option value="created_at.desc">作成日（新しい順）</option>
+                                <option value="created_at.asc">作成日（古い順）</option>
+                                <option value="priority.desc">優先度（高い順）</option>
+                                <option value="due_date.asc">期限（近い順）</option>
+                                <option value="title.asc">タイトル（A-Z）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <button class="btn btn-small btn-secondary" onclick="DBView.clearFilters()">
+                                リセット
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 検索 -->
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="db-search" placeholder="タスクを検索...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    
+                    <!-- タスクリスト -->
+                    <div id="db-tasks" class="task-list-container">
+                        <!-- 全タスクがここに表示されます -->
+                    </div>
+                    
+                    <div class="empty-state" id="db-empty" style="display: none;">
+                        <div class="empty-state-icon">📝</div>
+                        <div class="empty-state-text">タスクがありません</div>
+                        <button class="btn btn-primary" onclick="document.getElementById('new-main-task-btn').click()">
+                            最初のタスクを作成
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- フォーカスモード オーバーレイ -->
+        <div class="modal-overlay" id="focus-mode-overlay">
+            <div class="modal focus-mode">
+                <div class="modal-header">
+                    <h3 class="modal-title">🎯 フォーカスモード</h3>
+                    <button class="modal-close" id="focus-mode-close">&times;</button>
+                </div>
+                
+                <div id="focus-task-content">
+                    <!-- フォーカス中のタスクがここに表示されます -->
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-danger" id="exit-focus-btn">
+                        フォーカス終了
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- タスク編集モーダル -->
+        <div class="modal-overlay" id="task-modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="task-modal-title">タスク編集</h3>
+                    <button class="modal-close" id="task-modal-close">&times;</button>
+                </div>
+                
+                <form id="task-form">
+                    <input type="hidden" id="task-id" name="id">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="task-title">タイトル *</label>
+                        <input type="text" class="form-input" id="task-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="task-description">説明</label>
+                        <textarea class="form-textarea" id="task-description" name="description" rows="4"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label" for="task-status">ステータス</label>
+                            <select class="form-select" id="task-status" name="status">
+                                <option value="pending">未着手</option>
+                                <option value="in_progress">進行中</option>
+                                <option value="completed">完了</option>
+                                <option value="cancelled">キャンセル</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="task-priority">優先度</label>
+                            <select class="form-select" id="task-priority" name="priority">
+                                <option value="1">最低</option>
+                                <option value="2">低</option>
+                                <option value="3">普通</option>
+                                <option value="4">高</option>
+                                <option value="5">最高</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label" for="task-category">カテゴリ</label>
+                            <select class="form-select" id="task-category" name="category">
+                                <option value="">選択してください</option>
+                                <option value="work">仕事</option>
+                                <option value="personal">個人</option>
+                                <option value="urgent">緊急</option>
+                                <option value="project">プロジェクト</option>
+                                <option value="learning">学習</option>
+                                <option value="health">健康</option>
+                                <option value="shopping">買い物</option>
+                                <option value="meeting">会議</option>
+                                <option value="call">電話</option>
+                                <option value="email">メール</option>
+                                <option value="research">調査</option>
+                                <option value="maintenance">メンテナンス</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="task-due-date">期限</label>
+                            <input type="datetime-local" class="form-input" id="task-due-date" name="due_date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; gap: 20px; align-items: center;">
+                        <label>
+                            <input type="checkbox" id="task-is-today" name="is_today"> 
+                            今日やる
+                        </label>
+                        <label>
+                            <input type="checkbox" id="task-is-interruption" name="is_interruption"> 
+                            割り込みタスク
+                        </label>
+                    </div>
+                    
+                    <div class="form-group text-center" style="margin-top: 30px;">
+                        <button type="button" class="btn btn-secondary" id="task-cancel-btn">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="task-save-btn">
+                            保存
+                        </button>
+                        <button type="button" class="btn btn-danger" id="task-delete-btn" style="display: none;">
+                            削除
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- インポート/エクスポート モーダル -->
+        <div class="modal-overlay" id="import-export-modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="import-export-modal-title">Markdown インポート/エクスポート</h3>
+                    <button class="modal-close" id="import-export-modal-close">&times;</button>
+                </div>
+                
+                <div id="import-export-content">
+                    <!-- インポート/エクスポート内容がここに表示されます -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/components/task-manager.js"></script>
+    <script src="js/components/today-view.js"></script>
+    <script src="js/components/interruption-view.js"></script>
+    <script src="js/components/focus-mode.js"></script>
+    <script src="js/components/db-view.js"></script>
+    <script src="js/components/markdown-export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

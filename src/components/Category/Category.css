@@ -1,0 +1,18 @@
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-picker input[type="color"] {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.color-value {
+  font-size: 0.875rem;
+  color: #4a5568;
+}
