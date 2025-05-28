@@ -1,0 +1,9 @@
+name = "task-manager-app"
+compatibility_date = "2025-04-13"
+account_id = "e272c145766a545b58ba584f8d6d1c4e"
+
+[site]
+bucket = "./build"
+
+[site.mounts]
+fallback_to = "index.html"

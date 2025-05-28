@@ -5,7 +5,7 @@ import AddCategoryModal from '../Category/AddCategoryModal';
 import supabase from '../../services/supabaseClient';
 import './Dashboard.css';
 
-function Dashboard({ session }) {
+function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ function Dashboard({ session }) {
   useEffect(() => {
     fetchTasks();
     fetchCategories();
-  }, [session]);
+  }, []);
 
   async function fetchTasks() {
     setLoading(true);
@@ -62,21 +62,12 @@ function Dashboard({ session }) {
     return true;
   });
 
-  // ログアウト処理
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
+
 
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <h1 className="dashboard-title">タスク管理アプリ</h1>
-        <button
-          onClick={handleLogout}
-          className="logout-button"
-        >
-          ログアウト
-        </button>
       </header>
 
       <div className="dashboard-controls">
