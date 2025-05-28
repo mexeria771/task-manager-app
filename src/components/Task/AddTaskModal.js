@@ -19,13 +19,7 @@ function AddTaskModal({ categories, onClose, onTaskAdded }) {
     setError(null);
 
     try {
-      // ユーザーIDの取得
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData || !userData.user) {
-        throw new Error('ユーザー情報が取得できませんでした');
-      }
-
-      // タスクの追加（user_idを明示的に設定）
+      // タスクの追加（認証なしバージョン）
       const { error: insertError } = await supabase
         .from('tasks')
         .insert([{
@@ -34,8 +28,7 @@ function AddTaskModal({ categories, onClose, onTaskAdded }) {
           priority: newTask.priority,
           due_date: newTask.due_date || null,
           category_id: newTask.category_id || null,
-          status: false,
-          user_id: userData.user.id
+          status: false
         }]);
 
       if (insertError) throw insertError;
