@@ -4,7 +4,6 @@ import QuickTaskInput from './QuickTaskInput';
 import './Task.css';
 
 function TaskList({ tasks, categories, loading, refreshTasks }) {
-  const [draggedTask, setDraggedTask] = useState(null);
   const [showCompleted, setShowCompleted] = useState(true);
 
   // タスクを優先度と期限でソート
@@ -48,8 +47,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
       <div className="task-container">
         <QuickTaskInput categories={categories} onTaskAdded={refreshTasks} />
         <div className="task-loading">
-          <div className="loading-spinner">⏳</div>
-          <p>タスクを読み込んでいます...</p>
+          <div className="loading-spinner">読み込み中...</div>
         </div>
       </div>
     );
@@ -60,11 +58,10 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
       {/* クイック入力エリア - 最優先表示 */}
       <QuickTaskInput categories={categories} onTaskAdded={refreshTasks} />
       
-      {/* 統計とモチベーション */}
+      {/* 統計 */}
       <div className="dashboard-stats">
         <div className="stats-grid">
           <div className="stat-card urgent">
-            <div className="stat-icon">🔥</div>
             <div className="stat-content">
               <div className="stat-number">{activeTasks.filter(t => t.priority === '高').length}</div>
               <div className="stat-label">緊急</div>
@@ -72,7 +69,6 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
           </div>
           
           <div className="stat-card today">
-            <div className="stat-icon">📅</div>
             <div className="stat-content">
               <div className="stat-number">{todaysTasks.length}</div>
               <div className="stat-label">今日</div>
@@ -80,7 +76,6 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
           </div>
           
           <div className="stat-card progress">
-            <div className="stat-icon">✨</div>
             <div className="stat-content">
               <div className="stat-number">
                 {tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%
@@ -90,29 +85,11 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
           </div>
           
           <div className="stat-card total">
-            <div className="stat-icon">📋</div>
             <div className="stat-content">
               <div className="stat-number">{activeTasks.length}</div>
               <div className="stat-label">残り</div>
             </div>
           </div>
-        </div>
-        
-        {/* 励ましメッセージ */}
-        <div className="motivation-banner">
-          {activeTasks.length === 0 ? (
-            <div className="motivation-success">
-              🎉 素晴らしい！全てのタスクが完了しています！
-            </div>
-          ) : activeTasks.length <= 3 ? (
-            <div className="motivation-encourage">
-              💪 あと{activeTasks.length}個！もう少しで全部完了です！
-            </div>
-          ) : (
-            <div className="motivation-start">
-              🚀 一つずつ片付けていきましょう！
-            </div>
-          )}
         </div>
       </div>
 
@@ -120,14 +97,8 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
       <div className="task-list">
         {tasks.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🎯</div>
-            <h3>最初のタスクを追加してみましょう！</h3>
+            <h3>最初のタスクを追加してみましょう</h3>
             <p>上の入力欄に何でも書いてEnterを押すだけ</p>
-            <div className="empty-suggestions">
-              <div className="suggestion-item">💡 「メールを確認する」</div>
-              <div className="suggestion-item">💡 「部屋を片付ける」</div>
-              <div className="suggestion-item">💡 「買い物リストを作る」</div>
-            </div>
           </div>
         ) : (
           <>
@@ -135,7 +106,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
             {todaysTasks.length > 0 && (
               <div className="task-section">
                 <h3 className="section-title today-title">
-                  📅 今日やること ({todaysTasks.length})
+                  今日やること ({todaysTasks.length})
                 </h3>
                 <div className="task-grid">
                   {todaysTasks.map((task) => (
@@ -155,7 +126,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
             {activeTasks.filter(t => t.priority === '高' && !todaysTasks.includes(t)).length > 0 && (
               <div className="task-section">
                 <h3 className="section-title urgent-title">
-                  🔥 緊急・重要 ({activeTasks.filter(t => t.priority === '高' && !todaysTasks.includes(t)).length})
+                  緊急・重要 ({activeTasks.filter(t => t.priority === '高' && !todaysTasks.includes(t)).length})
                 </h3>
                 <div className="task-grid">
                   {activeTasks
@@ -176,7 +147,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
             {activeTasks.filter(t => t.priority !== '高' && !todaysTasks.includes(t)).length > 0 && (
               <div className="task-section">
                 <h3 className="section-title normal-title">
-                  📋 その他のタスク ({activeTasks.filter(t => t.priority !== '高' && !todaysTasks.includes(t)).length})
+                  その他のタスク ({activeTasks.filter(t => t.priority !== '高' && !todaysTasks.includes(t)).length})
                 </h3>
                 <div className="task-grid">
                   {activeTasks
@@ -198,13 +169,13 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
               <div className="task-section">
                 <div className="section-header">
                   <h3 className="section-title completed-title">
-                    ✅ 完了済み ({completedTasks.length})
+                    完了済み ({completedTasks.length})
                   </h3>
                   <button
                     onClick={() => setShowCompleted(!showCompleted)}
                     className="toggle-completed-btn"
                   >
-                    {showCompleted ? '🙈 隠す' : '👀 表示'}
+                    {showCompleted ? '隠す' : '表示'}
                   </button>
                 </div>
                 

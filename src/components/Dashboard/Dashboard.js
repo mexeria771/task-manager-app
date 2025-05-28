@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TaskList from '../Task/TaskList';
 import supabase from '../../services/supabaseClient';
 import './Dashboard.css';
@@ -9,30 +9,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [error, setError] = useState(null);
-  const [motivationQuote, setMotivationQuote] = useState('');
-
-  // 励ましメッセージのリスト
-  const motivationQuotes = [
-    "🌟 小さな一歩が大きな変化を生みます",
-    "💪 今日できることから始めましょう",
-    "🎯 完璧を目指さず、進歩を大切に",
-    "✨ あなたのペースで大丈夫です",
-    "🚀 一つずつ片付けていけばOK",
-    "🌈 今日も頑張っているあなたが素晴らしい",
-    "⭐ 集中力は波があって当然です",
-    "🌻 やる気が出ない日もあります、それでOK"
-  ];
 
   // タスクとカテゴリを取得
-  useEffect(() => {
-    fetchTasks();
-    fetchCategories();
-    // 励ましメッセージをランダムに選択
-    const randomQuote = motivationQuotes[Math.floor(Math.random() * motivationQuotes.length)];
-    setMotivationQuote(randomQuote);
-  }, []);
-
-  async function fetchTasks() {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -58,9 +37,9 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -75,7 +54,12 @@ function Dashboard() {
     } catch (err) {
       console.error('カテゴリ取得エラー:', err);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+    fetchCategories();
+  }, [fetchTasks, fetchCategories]);
 
   // タスクのフィルタリング
   const getFilteredTasks = () => {
@@ -135,8 +119,7 @@ function Dashboard() {
       <header className="dashboard-header">
         <div className="header-content">
           <div className="header-title-section">
-            <h1 className="dashboard-title">✨ タスク管理</h1>
-            <p className="dashboard-subtitle">{motivationQuote}</p>
+            <h1 className="dashboard-title">タスク管理</h1>
           </div>
           
           {/* 時刻表示 */}
@@ -162,7 +145,6 @@ function Dashboard() {
       {error && (
         <div className="error-banner">
           <div className="error-content">
-            <span className="error-icon">⚠️</span>
             <span className="error-message">{error}</span>
             <button 
               onClick={() => {
@@ -171,7 +153,7 @@ function Dashboard() {
               }}
               className="retry-button"
             >
-              🔄 再試行
+              再試行
             </button>
           </div>
         </div>
@@ -182,7 +164,7 @@ function Dashboard() {
         <div className="tab-controls">
           <TabButton
             tabKey="all"
-            icon="📋"
+            icon=""
             label="すべて"
             count={tasks.length}
             isActive={activeTab === 'all'}
@@ -192,7 +174,7 @@ function Dashboard() {
           
           <TabButton
             tabKey="active"
-            icon="⚡"
+            icon=""
             label="未完了"
             count={activeTasks.length}
             isActive={activeTab === 'active'}
@@ -202,7 +184,7 @@ function Dashboard() {
           
           <TabButton
             tabKey="today"
-            icon="📅"
+            icon=""
             label="今日"
             count={todaysTasks.length}
             isActive={activeTab === 'today'}
@@ -212,7 +194,7 @@ function Dashboard() {
           
           <TabButton
             tabKey="urgent"
-            icon="🔥"
+            icon=""
             label="緊急"
             count={urgentTasks.length}
             isActive={activeTab === 'urgent'}
@@ -222,7 +204,7 @@ function Dashboard() {
           
           <TabButton
             tabKey="completed"
-            icon="✅"
+            icon=""
             label="完了"
             count={completedTasks.length}
             isActive={activeTab === 'completed'}
@@ -242,18 +224,6 @@ function Dashboard() {
           activeTab={activeTab}
         />
       </div>
-
-      {/* フッター */}
-      <footer className="dashboard-footer">
-        <div className="footer-content">
-          <div className="focus-tip">
-            💡 <strong>集中のコツ:</strong> 一度に一つのタスクに集中しましょう
-          </div>
-          <div className="app-version">
-            ADHDフレンドリー設計 v2.0
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

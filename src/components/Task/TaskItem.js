@@ -8,15 +8,6 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isQuickEdit, setIsQuickEdit] = useState(false);
-  const [actionFeedback, setActionFeedback] = useState('');
-
-  // フィードバックメッセージを自動消去
-  React.useEffect(() => {
-    if (actionFeedback) {
-      const timer = setTimeout(() => setActionFeedback(''), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [actionFeedback]);
 
   // タスクの完了/未完了切り替え
   const handleStatusChange = async () => {
@@ -30,12 +21,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
       
       if (updateError) throw updateError;
       
-      // 成功フィードバック
-      setActionFeedback(newStatus ? '🎉 完了！' : '🔄 再開');
       refreshTasks();
     } catch (err) {
       console.error('タスクの更新中にエラーが発生しました:', err);
-      setActionFeedback('❌ エラー');
     }
   };
 
@@ -59,12 +47,10 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
       if (updateError) throw updateError;
       
       setIsEditing(false);
-      setActionFeedback('✨ 保存完了');
       refreshTasks();
     } catch (err) {
       console.error('タスクの保存中にエラーが発生しました:', err);
       setError(err.message);
-      setActionFeedback('❌ 保存失敗');
     } finally {
       setLoading(false);
     }
@@ -72,7 +58,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
 
   // タスクの削除処理
   const handleDelete = async () => {
-    if (window.confirm('🗑️ このタスクを削除してもよろしいですか？')) {
+    if (window.confirm('このタスクを削除してもよろしいですか？')) {
       try {
         const { error: deleteError } = await supabase
           .from('tasks')
@@ -81,11 +67,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
         
         if (deleteError) throw deleteError;
         
-        setActionFeedback('🗑️ 削除完了');
         refreshTasks();
       } catch (err) {
         console.error('タスクの削除中にエラーが発生しました:', err);
-        setActionFeedback('❌ 削除失敗');
       }
     }
   };
@@ -94,28 +78,24 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
   const getPriorityInfo = (priority) => {
     switch (priority) {
       case '高': return { 
-        icon: '🔥', 
         class: 'priority-high', 
         text: '緊急', 
         bgColor: '#fee2e2',
         textColor: '#dc2626'
       };
       case '中': return { 
-        icon: '⚖️', 
         class: 'priority-medium', 
         text: '普通', 
         bgColor: '#fef3c7',
         textColor: '#d97006'
       };
       case '低': return { 
-        icon: '🌸', 
         class: 'priority-low', 
         text: '後で', 
         bgColor: '#ecfdf5',
         textColor: '#059669'
       };
       default: return { 
-        icon: '⚖️', 
         class: 'priority-medium', 
         text: '普通', 
         bgColor: '#f3f4f6',
@@ -134,35 +114,30 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
     if (diffDays < 0) return { 
       status: 'overdue', 
       text: `${Math.abs(diffDays)}日遅れ`, 
-      icon: '🚨',
       bgColor: '#fecaca',
       textColor: '#dc2626'
     };
     if (diffDays === 0) return { 
       status: 'today', 
       text: '今日', 
-      icon: '⚡',
       bgColor: '#fbbf24',
       textColor: '#ffffff'
     };
     if (diffDays === 1) return { 
       status: 'tomorrow', 
       text: '明日', 
-      icon: '⏰',
       bgColor: '#fed7aa',
       textColor: '#ea580c'
     };
     if (diffDays <= 7) return { 
       status: 'week', 
       text: `${diffDays}日後`, 
-      icon: '📅',
       bgColor: '#dbeafe',
       textColor: '#2563eb'
     };
     return { 
       status: 'future', 
       text: due.toLocaleDateString(), 
-      icon: '📆',
       bgColor: '#e5e7eb',
       textColor: '#6b7280'
     };
@@ -182,11 +157,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
         .eq('id', task.id);
       
       if (error) throw error;
-      setActionFeedback('✏️ 更新完了');
       refreshTasks();
     } catch (err) {
       console.error('タイトル更新エラー:', err);
-      setActionFeedback('❌ 更新失敗');
     }
     setIsQuickEdit(false);
   };
@@ -204,11 +177,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
         .eq('id', task.id);
       
       if (error) throw error;
-      setActionFeedback(`🔄 ${newPriority}に変更`);
       refreshTasks();
     } catch (err) {
       console.error('優先度更新エラー:', err);
-      setActionFeedback('❌ 更新失敗');
     }
   };
 
@@ -218,13 +189,13 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
       <div className="task-item-edit">
         {error && (
           <div className="error-message">
-            ❌ {error}
+            {error}
           </div>
         )}
         
         <div className="edit-form">
           <div className="form-field">
-            <label htmlFor="title">📝 タイトル</label>
+            <label htmlFor="title">タイトル</label>
             <input
               id="title"
               type="text"
@@ -237,7 +208,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
           </div>
           
           <div className="form-field">
-            <label htmlFor="description">📄 説明（任意）</label>
+            <label htmlFor="description">説明（任意）</label>
             <textarea
               id="description"
               value={editedTask.description || ''}
@@ -249,20 +220,20 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
 
           <div className="form-row">
             <div className="form-field">
-              <label htmlFor="priority">🎯 優先度</label>
+              <label htmlFor="priority">優先度</label>
               <select
                 id="priority"
                 value={editedTask.priority || '中'}
                 onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
               >
-                <option value="高">🔥 今すぐやる</option>
-                <option value="中">⚖️ 普通</option>
-                <option value="低">🌸 後で</option>
+                <option value="高">緊急</option>
+                <option value="中">普通</option>
+                <option value="低">後で</option>
               </select>
             </div>
             
             <div className="form-field">
-              <label htmlFor="due_date">📅 いつまで？</label>
+              <label htmlFor="due_date">期限</label>
               <input
                 id="due_date"
                 type="date"
@@ -273,7 +244,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
           </div>
 
           <div className="form-field">
-            <label htmlFor="category">🏷️ カテゴリ</label>
+            <label htmlFor="category">カテゴリ</label>
             <select
               id="category"
               value={editedTask.category_id || ''}
@@ -294,14 +265,14 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
             onClick={() => setIsEditing(false)}
             className="cancel-btn"
           >
-            ❌ キャンセル
+            キャンセル
           </button>
           <button
             onClick={handleSave}
             className="save-btn"
             disabled={loading || !editedTask.title.trim()}
           >
-            {loading ? '💾 保存中...' : '✨ 保存'}
+            {loading ? '保存中...' : '保存'}
           </button>
         </div>
       </div>
@@ -311,25 +282,18 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
   const priorityInfo = getPriorityInfo(task.priority);
   const dueDateInfo = getDueDateInfo(task.due_date);
 
-  // 通常モードの表示（ADHD最適化）
+  // 通常モードの表示
   return (
     <div className={`task-card ${priorityInfo.class} ${task.status ? 'completed' : ''} ${isHighlighted ? 'highlighted' : ''} ${dueDateInfo?.status || ''}`}>
-      {/* アクションフィードバック */}
-      {actionFeedback && (
-        <div className="action-feedback">
-          {actionFeedback}
-        </div>
-      )}
-
       {/* 左側：ステータスとプライオリティ */}
       <div className="task-left-section">
         <button
           className={`completion-btn ${task.status ? 'completed' : ''}`}
           onClick={handleStatusChange}
-          title={task.status ? 'クリックで未完了に戻す' : 'クリックで完了！'}
+          title={task.status ? 'クリックで未完了に戻す' : 'クリックで完了'}
         >
           <div className="completion-icon">
-            {task.status ? '✅' : '⭕'}
+            {task.status ? '✓' : '○'}
           </div>
         </button>
         
@@ -342,7 +306,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
             color: priorityInfo.textColor
           }}
         >
-          {priorityInfo.icon}
+          {priorityInfo.text}
         </button>
       </div>
 
@@ -388,7 +352,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
                 borderColor: task.categories.color + '50'
               }}
             >
-              📁 {task.categories.name}
+              {task.categories.name}
             </span>
           )}
           
@@ -400,7 +364,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
                 color: dueDateInfo.textColor
               }}
             >
-              {dueDateInfo.icon} {dueDateInfo.text}
+              {dueDateInfo.text}
             </span>
           )}
         </div>
@@ -419,14 +383,14 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
           className="action-btn edit-btn"
           title="詳細編集"
         >
-          ✏️
+          編集
         </button>
         <button
           onClick={handleDelete}
           className="action-btn delete-btn"
           title="削除"
         >
-          🗑️
+          削除
         </button>
       </div>
     </div>
