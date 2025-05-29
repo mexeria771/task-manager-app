@@ -1,31 +1,20 @@
 import React, { useState } from 'react';
 import TaskItem from './TaskItem';
 import QuickTaskInput from './QuickTaskInput';
+import CategoryManager from './CategoryManager';
 import './Task.css';
 
 function TaskList({ tasks, categories, loading, refreshTasks }) {
   const [showCompleted, setShowCompleted] = useState(true);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
 
-  // タスクを優先度と期限でソート
+  // タスクを完了状態でソート
   const sortTasks = (tasks) => {
     return [...tasks].sort((a, b) => {
       // 完了済みは下に
       if (a.status !== b.status) {
         return a.status ? 1 : -1;
       }
-      
-      // 優先度でソート (高 > 中 > 低)
-      const priorityOrder = { '高': 3, '中': 2, '低': 1 };
-      const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
-      
-      if (priorityDiff !== 0) return priorityDiff;
-      
-      // 期限でソート
-      if (a.due_date && b.due_date) {
-        return new Date(a.due_date) - new Date(b.due_date);
-      }
-      if (a.due_date && !b.due_date) return -1;
-      if (!a.due_date && b.due_date) return 1;
       
       // 最後に作成日順
       return new Date(b.created_at) - new Date(a.created_at);
@@ -35,12 +24,6 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
   const sortedTasks = sortTasks(tasks);
   const activeTasks = sortedTasks.filter(task => !task.status);
   const completedTasks = sortedTasks.filter(task => task.status);
-  const todaysTasks = activeTasks.filter(task => {
-    if (!task.due_date) return false;
-    const today = new Date().toDateString();
-    const taskDate = new Date(task.due_date).toDateString();
-    return today === taskDate;
-  });
 
   if (loading) {
     return (
@@ -55,39 +38,40 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
 
   return (
     <div className="task-container">
-      {/* クイック入力エリア - 最優先表示 */}
+      {/* クイック入力エリア */}
       <QuickTaskInput categories={categories} onTaskAdded={refreshTasks} />
+      
+      {/* カテゴリ管理 */}
+      <div className="category-management">
+        <button
+          onClick={() => setShowCategoryManager(!showCategoryManager)}
+          className="category-manager-toggle"
+        >
+          {showCategoryManager ? 'カテゴリを隠す' : 'カテゴリを管理'}
+        </button>
+        
+        {showCategoryManager && (
+          <CategoryManager 
+            categories={categories} 
+            onCategoriesChange={refreshTasks}
+          />
+        )}
+      </div>
       
       {/* 統計 */}
       <div className="dashboard-stats">
         <div className="stats-grid">
-          <div className="stat-card urgent">
-            <div className="stat-content">
-              <div className="stat-number">{activeTasks.filter(t => t.priority === '高').length}</div>
-              <div className="stat-label">緊急</div>
-            </div>
-          </div>
-          
-          <div className="stat-card today">
-            <div className="stat-content">
-              <div className="stat-number">{todaysTasks.length}</div>
-              <div className="stat-label">今日</div>
-            </div>
-          </div>
-          
-          <div className="stat-card progress">
-            <div className="stat-content">
-              <div className="stat-number">
-                {tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%
-              </div>
-              <div className="stat-label">完了率</div>
-            </div>
-          </div>
-          
           <div className="stat-card total">
             <div className="stat-content">
               <div className="stat-number">{activeTasks.length}</div>
-              <div className="stat-label">残り</div>
+              <div className="stat-label">未完了</div>
+            </div>
+          </div>
+          
+          <div className="stat-card completed">
+            <div className="stat-content">
+              <div className="stat-number">{completedTasks.length}</div>
+              <div className="stat-label">完了</div>
             </div>
           </div>
         </div>
@@ -102,64 +86,21 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
           </div>
         ) : (
           <>
-            {/* 今日のタスク */}
-            {todaysTasks.length > 0 && (
+            {/* 未完了タスク */}
+            {activeTasks.length > 0 && (
               <div className="task-section">
-                <h3 className="section-title today-title">
-                  今日やること ({todaysTasks.length})
+                <h3 className="section-title">
+                  やること ({activeTasks.length})
                 </h3>
                 <div className="task-grid">
-                  {todaysTasks.map((task) => (
+                  {activeTasks.map((task) => (
                     <TaskItem
                       key={task.id}
                       task={task}
                       categories={categories}
                       refreshTasks={refreshTasks}
-                      isHighlighted={true}
                     />
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* 緊急タスク */}
-            {activeTasks.filter(t => t.priority === '高' && !todaysTasks.includes(t)).length > 0 && (
-              <div className="task-section">
-                <h3 className="section-title urgent-title">
-                  緊急・重要 ({activeTasks.filter(t => t.priority === '高' && !todaysTasks.includes(t)).length})
-                </h3>
-                <div className="task-grid">
-                  {activeTasks
-                    .filter(t => t.priority === '高' && !todaysTasks.includes(t))
-                    .map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        categories={categories}
-                        refreshTasks={refreshTasks}
-                      />
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* 通常のタスク */}
-            {activeTasks.filter(t => t.priority !== '高' && !todaysTasks.includes(t)).length > 0 && (
-              <div className="task-section">
-                <h3 className="section-title normal-title">
-                  その他のタスク ({activeTasks.filter(t => t.priority !== '高' && !todaysTasks.includes(t)).length})
-                </h3>
-                <div className="task-grid">
-                  {activeTasks
-                    .filter(t => t.priority !== '高' && !todaysTasks.includes(t))
-                    .map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        categories={categories}
-                        refreshTasks={refreshTasks}
-                      />
-                    ))}
                 </div>
               </div>
             )}

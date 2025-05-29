@@ -6,8 +6,6 @@ function QuickTaskInput({ categories, onTaskAdded }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
-    priority: '中',
-    due_date: '',
     category_id: ''
   });
   const [loading, setLoading] = useState(false);
@@ -30,7 +28,7 @@ function QuickTaskInput({ categories, onTaskAdded }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       setIsExpanded(false);
-      setNewTask({ title: '', priority: '中', due_date: '', category_id: '' });
+      setNewTask({ title: '', category_id: '' });
       inputRef.current?.blur();
     }
   };
@@ -45,23 +43,25 @@ function QuickTaskInput({ categories, onTaskAdded }) {
         .from('tasks')
         .insert([{
           title: newTask.title.trim(),
-          priority: newTask.priority,
-          due_date: newTask.due_date || null,
           category_id: newTask.category_id || null,
           status: false
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
       // リセット
-      setNewTask({ title: '', priority: '中', due_date: '', category_id: '' });
+      setNewTask({ title: '', category_id: '' });
       setIsExpanded(false);
       onTaskAdded();
       
-      // フォーカスを戻す（継続的な入力をサポート）
+      // フォーカスを戻す
       setTimeout(() => inputRef.current?.focus(), 100);
     } catch (err) {
       console.error('タスクの追加中にエラーが発生しました:', err);
+      alert(`エラー: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -115,36 +115,10 @@ function QuickTaskInput({ categories, onTaskAdded }) {
         )}
       </div>
 
-      {/* 拡張オプション（必要時のみ表示） */}
-      {isExpanded && (
+      {/* カテゴリ選択（必要時のみ表示） */}
+      {isExpanded && categories.length > 0 && (
         <div className="expanded-options">
           <div className="quick-options-row">
-            {/* 優先度 */}
-            <div className="quick-option">
-              <label>優先度</label>
-              <select
-                value={newTask.priority}
-                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                className="priority-select"
-              >
-                <option value="高">緊急</option>
-                <option value="中">普通</option>
-                <option value="低">後で</option>
-              </select>
-            </div>
-
-            {/* 期限 */}
-            <div className="quick-option">
-              <label>期限</label>
-              <input
-                type="date"
-                value={newTask.due_date}
-                onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                className="date-input"
-              />
-            </div>
-
-            {/* カテゴリ */}
             <div className="quick-option">
               <label>カテゴリ</label>
               <select

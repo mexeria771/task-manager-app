@@ -1027,13 +1027,259 @@
 }
 
 /* ========================================
+   カテゴリ管理 - Notionスタイル
+======================================== */
+
+.category-management {
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+}
+
+.category-manager-toggle {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-manager-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.category-manager {
+  margin-top: 15px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.category-manager-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 15px 0;
+}
+
+.add-category-section {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.add-category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-name-input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.category-name-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: #374151;
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+}
+
+.add-category-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-category-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.add-category-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.no-categories {
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+  padding: 15px;
+  text-align: center;
+}
+
+.category-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.category-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.category-color-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.category-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.category-action-btn {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-action-btn.edit {
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.category-action-btn.edit:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.category-action-btn.delete {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.category-action-btn.delete:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.category-action-btn.cancel {
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.category-action-btn.cancel:hover {
+  background: #f3f4f6;
+}
+
+.category-action-btn.save {
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.category-action-btn.save:hover:not(:disabled) {
+  background: #10b981;
+  color: white;
+}
+
+.category-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 統計カードの調整 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-card.completed {
+  border-color: #a7f3d0;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+
+/* ========================================
    印刷用スタイル
 ======================================== */
 
 @media print {
   .quick-input-container,
   .task-actions,
-  .dashboard-stats {
+  .dashboard-stats,
+  .category-management {
     display: none;
   }
   

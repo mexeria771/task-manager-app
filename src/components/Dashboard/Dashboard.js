@@ -26,7 +26,7 @@ function Dashboard() {
 
       if (error) {
         console.error('タスクの取得中にエラーが発生しました:', error);
-        setError('タスクの読み込みに失敗しました。ページを更新してください。');
+        setError('タスクの読み込みに失敗しました。データベースの設定を確認してください。');
       } else {
         setTasks(data || []);
         setError(null);
@@ -70,15 +70,6 @@ function Dashboard() {
         return tasks.filter(task => !task.status);
       case 'completed':
         return tasks.filter(task => task.status);
-      case 'today':
-        return tasks.filter(task => {
-          if (!task.due_date) return false;
-          const today = new Date().toDateString();
-          const taskDate = new Date(task.due_date).toDateString();
-          return today === taskDate && !task.status;
-        });
-      case 'urgent':
-        return tasks.filter(task => task.priority === '高' && !task.status);
       default:
         return tasks;
     }
@@ -87,27 +78,15 @@ function Dashboard() {
   const filteredTasks = getFilteredTasks();
   const activeTasks = tasks.filter(task => !task.status);
   const completedTasks = tasks.filter(task => task.status);
-  const todaysTasks = tasks.filter(task => {
-    if (!task.due_date) return false;
-    const today = new Date().toDateString();
-    const taskDate = new Date(task.due_date).toDateString();
-    return today === taskDate && !task.status;
-  });
-  const urgentTasks = tasks.filter(task => task.priority === '高' && !task.status);
 
-  // タブ切り替え時のアニメーション効果
-  const TabButton = ({ tabKey, icon, label, count, isActive, onClick, color = '#6b7280' }) => (
+  // タブ切り替えボタン
+  const TabButton = ({ tabKey, label, count, isActive, onClick }) => (
     <button
       onClick={() => onClick(tabKey)}
       className={`tab-button ${isActive ? 'active' : ''}`}
-      style={{
-        borderColor: isActive ? color : 'transparent',
-        color: isActive ? color : '#6b7280'
-      }}
     >
-      <span className="tab-icon">{icon}</span>
       <span className="tab-label">{label}</span>
-      <span className="tab-count" style={{ backgroundColor: isActive ? color : '#e5e7eb' }}>
+      <span className="tab-count">
         {count}
       </span>
     </button>
@@ -159,57 +138,31 @@ function Dashboard() {
         </div>
       )}
 
-      {/* タブコントロール */}
+      {/* タブコントロール - シンプル化 */}
       <div className="dashboard-controls">
         <div className="tab-controls">
           <TabButton
             tabKey="all"
-            icon=""
             label="すべて"
             count={tasks.length}
             isActive={activeTab === 'all'}
             onClick={setActiveTab}
-            color="#374151"
           />
           
           <TabButton
             tabKey="active"
-            icon=""
             label="未完了"
             count={activeTasks.length}
             isActive={activeTab === 'active'}
             onClick={setActiveTab}
-            color="#3b82f6"
-          />
-          
-          <TabButton
-            tabKey="today"
-            icon=""
-            label="今日"
-            count={todaysTasks.length}
-            isActive={activeTab === 'today'}
-            onClick={setActiveTab}
-            color="#f59e0b"
-          />
-          
-          <TabButton
-            tabKey="urgent"
-            icon=""
-            label="緊急"
-            count={urgentTasks.length}
-            isActive={activeTab === 'urgent'}
-            onClick={setActiveTab}
-            color="#dc2626"
           />
           
           <TabButton
             tabKey="completed"
-            icon=""
             label="完了"
             count={completedTasks.length}
             isActive={activeTab === 'completed'}
             onClick={setActiveTab}
-            color="#10b981"
           />
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import supabase from '../../services/supabaseClient';
 import './Task.css';
 
-function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }) {
+function TaskItem({ task, categories, refreshTasks, isCompleted }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task });
   const [error, setError] = useState(null);
@@ -24,6 +24,7 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
       refreshTasks();
     } catch (err) {
       console.error('タスクの更新中にエラーが発生しました:', err);
+      alert(`更新エラー: ${err.message}`);
     }
   };
 
@@ -38,8 +39,6 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
         .update({
           title: editedTask.title,
           description: editedTask.description,
-          priority: editedTask.priority,
-          due_date: editedTask.due_date,
           category_id: editedTask.category_id
         })
         .eq('id', task.id);
@@ -70,77 +69,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
         refreshTasks();
       } catch (err) {
         console.error('タスクの削除中にエラーが発生しました:', err);
+        alert(`削除エラー: ${err.message}`);
       }
     }
-  };
-
-  // 優先度に応じた表示情報
-  const getPriorityInfo = (priority) => {
-    switch (priority) {
-      case '高': return { 
-        class: 'priority-high', 
-        text: '緊急', 
-        bgColor: '#fee2e2',
-        textColor: '#dc2626'
-      };
-      case '中': return { 
-        class: 'priority-medium', 
-        text: '普通', 
-        bgColor: '#fef3c7',
-        textColor: '#d97006'
-      };
-      case '低': return { 
-        class: 'priority-low', 
-        text: '後で', 
-        bgColor: '#ecfdf5',
-        textColor: '#059669'
-      };
-      default: return { 
-        class: 'priority-medium', 
-        text: '普通', 
-        bgColor: '#f3f4f6',
-        textColor: '#6b7280'
-      };
-    }
-  };
-
-  // 期限の状態を取得
-  const getDueDateInfo = (dueDate) => {
-    if (!dueDate) return null;
-    const due = new Date(dueDate);
-    const today = new Date();
-    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return { 
-      status: 'overdue', 
-      text: `${Math.abs(diffDays)}日遅れ`, 
-      bgColor: '#fecaca',
-      textColor: '#dc2626'
-    };
-    if (diffDays === 0) return { 
-      status: 'today', 
-      text: '今日', 
-      bgColor: '#fbbf24',
-      textColor: '#ffffff'
-    };
-    if (diffDays === 1) return { 
-      status: 'tomorrow', 
-      text: '明日', 
-      bgColor: '#fed7aa',
-      textColor: '#ea580c'
-    };
-    if (diffDays <= 7) return { 
-      status: 'week', 
-      text: `${diffDays}日後`, 
-      bgColor: '#dbeafe',
-      textColor: '#2563eb'
-    };
-    return { 
-      status: 'future', 
-      text: due.toLocaleDateString(), 
-      bgColor: '#e5e7eb',
-      textColor: '#6b7280'
-    };
   };
 
   // 素早いタイトル編集
@@ -160,27 +91,9 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
       refreshTasks();
     } catch (err) {
       console.error('タイトル更新エラー:', err);
+      alert(`タイトル更新エラー: ${err.message}`);
     }
     setIsQuickEdit(false);
-  };
-
-  // 優先度を素早く変更
-  const cyclePriority = async () => {
-    const priorities = ['低', '中', '高'];
-    const currentIndex = priorities.indexOf(task.priority || '中');
-    const newPriority = priorities[(currentIndex + 1) % priorities.length];
-    
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ priority: newPriority })
-        .eq('id', task.id);
-      
-      if (error) throw error;
-      refreshTasks();
-    } catch (err) {
-      console.error('優先度更新エラー:', err);
-    }
   };
 
   // 編集モードの表示
@@ -216,31 +129,6 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
               placeholder="詳細情報があれば..."
               rows="3"
             />
-          </div>
-
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="priority">優先度</label>
-              <select
-                id="priority"
-                value={editedTask.priority || '中'}
-                onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
-              >
-                <option value="高">緊急</option>
-                <option value="中">普通</option>
-                <option value="低">後で</option>
-              </select>
-            </div>
-            
-            <div className="form-field">
-              <label htmlFor="due_date">期限</label>
-              <input
-                id="due_date"
-                type="date"
-                value={editedTask.due_date || ''}
-                onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
-              />
-            </div>
           </div>
 
           <div className="form-field">
@@ -279,13 +167,10 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
     );
   }
 
-  const priorityInfo = getPriorityInfo(task.priority);
-  const dueDateInfo = getDueDateInfo(task.due_date);
-
   // 通常モードの表示
   return (
-    <div className={`task-card ${priorityInfo.class} ${task.status ? 'completed' : ''} ${isHighlighted ? 'highlighted' : ''} ${dueDateInfo?.status || ''}`}>
-      {/* 左側：ステータスとプライオリティ */}
+    <div className={`task-card ${task.status ? 'completed' : ''}`}>
+      {/* 左側：完了チェック */}
       <div className="task-left-section">
         <button
           className={`completion-btn ${task.status ? 'completed' : ''}`}
@@ -295,18 +180,6 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
           <div className="completion-icon">
             {task.status ? '✓' : '○'}
           </div>
-        </button>
-        
-        <button
-          className="priority-btn"
-          onClick={cyclePriority}
-          title={`優先度: ${priorityInfo.text} (クリックで切り替え)`}
-          style={{
-            backgroundColor: priorityInfo.bgColor,
-            color: priorityInfo.textColor
-          }}
-        >
-          {priorityInfo.text}
         </button>
       </div>
 
@@ -353,18 +226,6 @@ function TaskItem({ task, categories, refreshTasks, isHighlighted, isCompleted }
               }}
             >
               {task.categories.name}
-            </span>
-          )}
-          
-          {dueDateInfo && (
-            <span 
-              className={`due-date-tag ${dueDateInfo.status}`}
-              style={{
-                backgroundColor: dueDateInfo.bgColor,
-                color: dueDateInfo.textColor
-              }}
-            >
-              {dueDateInfo.text}
             </span>
           )}
         </div>
