@@ -60,7 +60,6 @@ function MarkdownManager({ tasks, categories, onDataChange }) {
       let currentCategory = null;
       let currentTask = null;
       const tasksToCreate = [];
-      const subtasksToCreate = [];
 
       for (const line of lines) {
         const trimmedLine = line.trim();
@@ -86,11 +85,11 @@ function MarkdownManager({ tasks, categories, onDataChange }) {
         }
 
         // メインタスク（- [x] または - [ ]）
-        if (trimmedLine.match(/^[\-\*] \[(x| )\]/)) {
+        if (trimmedLine.match(/^[-*] \[(x| )\]/)) {
           const isCompleted = trimmedLine.includes('[x]');
           const isExecuting = trimmedLine.includes('🎯');
           const title = trimmedLine
-            .replace(/^[\-\*] \[(x| )\]/, '')
+            .replace(/^[-*] \[(x| )\]/, '')
             .replace('🎯', '')
             .trim();
 
@@ -113,10 +112,12 @@ function MarkdownManager({ tasks, categories, onDataChange }) {
         }
 
         // サブタスク（  - [x] または  - [ ]）
-        if (trimmedLine.match(/^  \- \[(x| )\]/)) {
+        // eslint-disable-next-line no-regex-spaces
+        if (trimmedLine.match(/^  - \[(x| )\]/)) {
           const isCompleted = trimmedLine.includes('[x]');
+          // eslint-disable-next-line no-regex-spaces
           const title = trimmedLine
-            .replace(/^  \- \[(x| )\]/, '')
+            .replace(/^  - \[(x| )\]/, '')
             .trim();
 
           if (currentTask) {
