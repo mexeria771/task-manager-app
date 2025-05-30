@@ -20,8 +20,10 @@ function Dashboard() {
         .from('tasks')
         .select(`
           *,
-          categories(id, name, color)
+          categories(id, name, color),
+          subtasks(id, title, status)
         `)
+        .order('custom_order', { ascending: true, nullsLast: true })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -68,6 +70,8 @@ function Dashboard() {
         return tasks;
       case 'active':
         return tasks.filter(task => !task.status);
+      case 'executing':
+        return tasks.filter(task => task.is_executing);
       case 'completed':
         return tasks.filter(task => task.status);
       default:
@@ -78,15 +82,20 @@ function Dashboard() {
   const filteredTasks = getFilteredTasks();
   const activeTasks = tasks.filter(task => !task.status);
   const completedTasks = tasks.filter(task => task.status);
+  const executingTasks = tasks.filter(task => task.is_executing);
 
   // タブ切り替えボタン
-  const TabButton = ({ tabKey, label, count, isActive, onClick }) => (
+  const TabButton = ({ tabKey, label, count, isActive, onClick, color = '#6b7280' }) => (
     <button
       onClick={() => onClick(tabKey)}
       className={`tab-button ${isActive ? 'active' : ''}`}
+      style={{
+        borderColor: isActive ? color : 'transparent',
+        color: isActive ? color : '#6b7280'
+      }}
     >
       <span className="tab-label">{label}</span>
-      <span className="tab-count">
+      <span className="tab-count" style={{ backgroundColor: isActive ? color : '#e5e7eb' }}>
         {count}
       </span>
     </button>
@@ -138,7 +147,7 @@ function Dashboard() {
         </div>
       )}
 
-      {/* タブコントロール - シンプル化 */}
+      {/* タブコントロール */}
       <div className="dashboard-controls">
         <div className="tab-controls">
           <TabButton
@@ -147,6 +156,16 @@ function Dashboard() {
             count={tasks.length}
             isActive={activeTab === 'all'}
             onClick={setActiveTab}
+            color="#374151"
+          />
+          
+          <TabButton
+            tabKey="executing"
+            label="実行中"
+            count={executingTasks.length}
+            isActive={activeTab === 'executing'}
+            onClick={setActiveTab}
+            color="#f59e0b"
           />
           
           <TabButton
@@ -155,6 +174,7 @@ function Dashboard() {
             count={activeTasks.length}
             isActive={activeTab === 'active'}
             onClick={setActiveTab}
+            color="#3b82f6"
           />
           
           <TabButton
@@ -163,6 +183,7 @@ function Dashboard() {
             count={completedTasks.length}
             isActive={activeTab === 'completed'}
             onClick={setActiveTab}
+            color="#10b981"
           />
         </div>
       </div>

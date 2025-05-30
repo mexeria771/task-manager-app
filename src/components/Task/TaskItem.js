@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import supabase from '../../services/supabaseClient';
 import './Task.css';
 
-function TaskItem({ task, categories, refreshTasks, isCompleted }) {
+function TaskItem({ task, categories, refreshTasks, isCompleted, index, onDragStart, onDragOver, onDrop }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isQuickEdit, setIsQuickEdit] = useState(false);
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const [newSubtask, setNewSubtask] = useState('');
 
   // タスクの完了/未完了切り替え
   const handleStatusChange = async () => {
@@ -25,6 +27,33 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
     } catch (err) {
       console.error('タスクの更新中にエラーが発生しました:', err);
       alert(`更新エラー: ${err.message}`);
+    }
+  };
+
+  // 実行中状態の切り替え
+  const handleExecutingChange = async () => {
+    try {
+      const newExecuting = !task.is_executing;
+      
+      // 他のタスクの実行中状態をfalseにする
+      if (newExecuting) {
+        await supabase
+          .from('tasks')
+          .update({ is_executing: false })
+          .neq('id', task.id);
+      }
+      
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ is_executing: newExecuting })
+        .eq('id', task.id);
+      
+      if (updateError) throw updateError;
+      
+      refreshTasks();
+    } catch (err) {
+      console.error('実行状態の更新中にエラーが発生しました:', err);
+      alert(`実行状態更新エラー: ${err.message}`);
     }
   };
 
@@ -59,6 +88,13 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
   const handleDelete = async () => {
     if (window.confirm('このタスクを削除してもよろしいですか？')) {
       try {
+        // まずサブタスクを削除
+        await supabase
+          .from('subtasks')
+          .delete()
+          .eq('task_id', task.id);
+
+        // メインタスクを削除
         const { error: deleteError } = await supabase
           .from('tasks')
           .delete()
@@ -94,6 +130,59 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
       alert(`タイトル更新エラー: ${err.message}`);
     }
     setIsQuickEdit(false);
+  };
+
+  // サブタスク追加
+  const handleAddSubtask = async () => {
+    if (!newSubtask.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('subtasks')
+        .insert([{
+          task_id: task.id,
+          title: newSubtask.trim(),
+          status: false
+        }]);
+
+      if (error) throw error;
+
+      setNewSubtask('');
+      refreshTasks();
+    } catch (err) {
+      console.error('サブタスク追加エラー:', err);
+      alert(`サブタスク追加エラー: ${err.message}`);
+    }
+  };
+
+  // サブタスクの完了切り替え
+  const handleSubtaskStatusChange = async (subtaskId, currentStatus) => {
+    try {
+      const { error } = await supabase
+        .from('subtasks')
+        .update({ status: !currentStatus })
+        .eq('id', subtaskId);
+
+      if (error) throw error;
+      refreshTasks();
+    } catch (err) {
+      console.error('サブタスク更新エラー:', err);
+    }
+  };
+
+  // ドラッグ関連のハンドラー
+  const handleDragStart = (e) => {
+    if (onDragStart) onDragStart(e, index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (onDragOver) onDragOver(e, index);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (onDrop) onDrop(e, index);
   };
 
   // 編集モードの表示
@@ -169,8 +258,21 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
 
   // 通常モードの表示
   return (
-    <div className={`task-card ${task.status ? 'completed' : ''}`}>
-      {/* 左側：完了チェック */}
+    <div 
+      className={`task-card ${task.status ? 'completed' : ''} ${task.is_executing ? 'executing' : ''}`}
+      draggable={!task.status}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* ドラッグハンドル */}
+      {!task.status && (
+        <div className="drag-handle" title="ドラッグして順序変更">
+          ⋮⋮
+        </div>
+      )}
+
+      {/* 左側：ステータスボタン */}
       <div className="task-left-section">
         <button
           className={`completion-btn ${task.status ? 'completed' : ''}`}
@@ -181,11 +283,27 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
             {task.status ? '✓' : '○'}
           </div>
         </button>
+        
+        {!task.status && (
+          <button
+            className={`executing-btn ${task.is_executing ? 'active' : ''}`}
+            onClick={handleExecutingChange}
+            title={task.is_executing ? '実行中を停止' : '実行中にする'}
+          >
+            {task.is_executing ? '⏸' : '▶'}
+          </button>
+        )}
       </div>
 
       {/* 中央：メインコンテンツ */}
       <div className="task-content">
         <div className="task-header">
+          {task.is_executing && (
+            <div className="executing-indicator">
+              🎯 実行中
+            </div>
+          )}
+          
           {isQuickEdit ? (
             <input
               type="text"
@@ -206,7 +324,7 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
             />
           ) : (
             <h3 
-              className={`task-title ${task.status ? 'completed' : ''}`}
+              className={`task-title ${task.status ? 'completed' : ''} ${task.is_executing ? 'executing' : ''}`}
               onClick={() => setIsQuickEdit(true)}
               title="クリックでタイトル編集"
             >
@@ -228,6 +346,12 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
               {task.categories.name}
             </span>
           )}
+          
+          {task.subtasks && task.subtasks.length > 0 && (
+            <span className="subtask-count">
+              {task.subtasks.filter(st => st.status).length}/{task.subtasks.length} サブタスク
+            </span>
+          )}
         </div>
         
         {task.description && !task.status && (
@@ -235,6 +359,59 @@ function TaskItem({ task, categories, refreshTasks, isCompleted }) {
             {task.description}
           </p>
         )}
+
+        {/* サブタスク表示・追加 */}
+        <div className="subtask-section">
+          <button
+            onClick={() => setShowSubtasks(!showSubtasks)}
+            className="subtask-toggle"
+            title="サブタスクを表示"
+          >
+            {showSubtasks ? '▼' : '▶'} サブタスク ({task.subtasks?.length || 0})
+          </button>
+
+          {showSubtasks && (
+            <div className="subtask-container">
+              {/* サブタスク一覧 */}
+              {task.subtasks && task.subtasks.map((subtask) => (
+                <div key={subtask.id} className="subtask-item">
+                  <button
+                    className={`subtask-checkbox ${subtask.status ? 'completed' : ''}`}
+                    onClick={() => handleSubtaskStatusChange(subtask.id, subtask.status)}
+                  >
+                    {subtask.status ? '✓' : '○'}
+                  </button>
+                  <span className={`subtask-title ${subtask.status ? 'completed' : ''}`}>
+                    {subtask.title}
+                  </span>
+                </div>
+              ))}
+
+              {/* サブタスク追加 */}
+              <div className="subtask-add">
+                <input
+                  type="text"
+                  value={newSubtask}
+                  onChange={(e) => setNewSubtask(e.target.value)}
+                  placeholder="サブタスクを追加..."
+                  className="subtask-input"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddSubtask();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleAddSubtask}
+                  disabled={!newSubtask.trim()}
+                  className="subtask-add-btn"
+                >
+                  追加
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 右側：アクション */}
