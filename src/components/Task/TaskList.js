@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import TaskItem from './TaskItem';
 import QuickTaskInput from './QuickTaskInput';
 import CategoryManager from './CategoryManager';
+import MarkdownManager from './MarkdownManager';
+import InterruptionTasks from './InterruptionTasks';
 import supabase from '../../services/supabaseClient';
 import './Task.css';
 
-function TaskList({ tasks, categories, loading, refreshTasks }) {
+function TaskList({ tasks, categories, loading, refreshTasks, interruptions, refreshInterruptions }) {
   const [showCompleted, setShowCompleted] = useState(true);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -100,6 +102,12 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
       {/* クイック入力エリア */}
       <QuickTaskInput categories={categories} onTaskAdded={refreshTasks} />
       
+      {/* 割り込みタスク */}
+      <InterruptionTasks 
+        interruptions={interruptions} 
+        refreshInterruptions={refreshInterruptions}
+      />
+      
       {/* カテゴリ管理 */}
       <div className="category-management">
         <button
@@ -116,6 +124,13 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
           />
         )}
       </div>
+
+      {/* Markdown インポート/エクスポート */}
+      <MarkdownManager 
+        tasks={tasks}
+        categories={categories}
+        onDataChange={refreshTasks}
+      />
       
       {/* 統計 */}
       <div className="dashboard-stats">
@@ -156,7 +171,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
             {executingTasks.length > 0 && (
               <div className="task-section executing-section">
                 <h3 className="section-title executing-title">
-                  🎯 実行中 ({executingTasks.length})
+                  実行中 ({executingTasks.length})
                 </h3>
                 <div className="task-grid">
                   {executingTasks.map((task, index) => (
@@ -179,7 +194,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
             {activeTasks.filter(t => !t.is_executing).length > 0 && (
               <div className="task-section">
                 <h3 className="section-title">
-                  📋 やること ({activeTasks.filter(t => !t.is_executing).length})
+                  やること ({activeTasks.filter(t => !t.is_executing).length})
                 </h3>
                 <div className="task-grid sortable">
                   {activeTasks
@@ -198,7 +213,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
                     ))}
                 </div>
                 <div className="drag-hint">
-                  💡 ドラッグしてタスクの順序を変更できます
+                  ドラッグしてタスクの順序を変更できます
                 </div>
               </div>
             )}
@@ -208,7 +223,7 @@ function TaskList({ tasks, categories, loading, refreshTasks }) {
               <div className="task-section">
                 <div className="section-header">
                   <h3 className="section-title completed-title">
-                    ✅ 完了済み ({completedTasks.length})
+                    完了済み ({completedTasks.length})
                   </h3>
                   <button
                     onClick={() => setShowCompleted(!showCompleted)}

@@ -6,6 +6,7 @@ import './Dashboard.css';
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [interruptions, setInterruptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [error, setError] = useState(null);
@@ -58,10 +59,28 @@ function Dashboard() {
     }
   }, []);
 
+  const fetchInterruptions = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('interruption_tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('割り込みタスクの取得中にエラーが発生しました:', error);
+      } else {
+        setInterruptions(data || []);
+      }
+    } catch (err) {
+      console.error('割り込みタスク取得エラー:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTasks();
     fetchCategories();
-  }, [fetchTasks, fetchCategories]);
+    fetchInterruptions();
+  }, [fetchTasks, fetchCategories, fetchInterruptions]);
 
   // タスクのフィルタリング
   const getFilteredTasks = () => {
@@ -138,6 +157,7 @@ function Dashboard() {
               onClick={() => {
                 fetchTasks();
                 fetchCategories();
+                fetchInterruptions();
               }}
               className="retry-button"
             >
@@ -165,7 +185,7 @@ function Dashboard() {
             count={executingTasks.length}
             isActive={activeTab === 'executing'}
             onClick={setActiveTab}
-            color="#f59e0b"
+            color="#94a3b8"
           />
           
           <TabButton
@@ -193,8 +213,10 @@ function Dashboard() {
         <TaskList
           tasks={filteredTasks}
           categories={categories}
+          interruptions={interruptions}
           loading={loading}
           refreshTasks={fetchTasks}
+          refreshInterruptions={fetchInterruptions}
           activeTab={activeTab}
         />
       </div>

@@ -8,7 +8,6 @@ function TaskItem({ task, categories, refreshTasks, isCompleted, index, onDragSt
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isQuickEdit, setIsQuickEdit] = useState(false);
-  const [showSubtasks, setShowSubtasks] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
 
   // タスクの完了/未完了切り替え
@@ -300,7 +299,7 @@ function TaskItem({ task, categories, refreshTasks, isCompleted, index, onDragSt
         <div className="task-header">
           {task.is_executing && (
             <div className="executing-indicator">
-              🎯 実行中
+              実行中
             </div>
           )}
           
@@ -338,9 +337,9 @@ function TaskItem({ task, categories, refreshTasks, isCompleted, index, onDragSt
             <span 
               className="category-tag"
               style={{ 
-                backgroundColor: task.categories.color + '20',
+                backgroundColor: task.categories.color + '15',
                 color: task.categories.color,
-                borderColor: task.categories.color + '50'
+                borderColor: task.categories.color + '30'
               }}
             >
               {task.categories.name}
@@ -360,57 +359,47 @@ function TaskItem({ task, categories, refreshTasks, isCompleted, index, onDragSt
           </p>
         )}
 
-        {/* サブタスク表示・追加 */}
+        {/* サブタスク表示（常に表示） */}
         <div className="subtask-section">
-          <button
-            onClick={() => setShowSubtasks(!showSubtasks)}
-            className="subtask-toggle"
-            title="サブタスクを表示"
-          >
-            {showSubtasks ? '▼' : '▶'} サブタスク ({task.subtasks?.length || 0})
-          </button>
-
-          {showSubtasks && (
-            <div className="subtask-container">
-              {/* サブタスク一覧 */}
-              {task.subtasks && task.subtasks.map((subtask) => (
-                <div key={subtask.id} className="subtask-item">
-                  <button
-                    className={`subtask-checkbox ${subtask.status ? 'completed' : ''}`}
-                    onClick={() => handleSubtaskStatusChange(subtask.id, subtask.status)}
-                  >
-                    {subtask.status ? '✓' : '○'}
-                  </button>
-                  <span className={`subtask-title ${subtask.status ? 'completed' : ''}`}>
-                    {subtask.title}
-                  </span>
-                </div>
-              ))}
-
-              {/* サブタスク追加 */}
-              <div className="subtask-add">
-                <input
-                  type="text"
-                  value={newSubtask}
-                  onChange={(e) => setNewSubtask(e.target.value)}
-                  placeholder="サブタスクを追加..."
-                  className="subtask-input"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddSubtask();
-                    }
-                  }}
-                />
+          <div className="subtask-container">
+            {/* サブタスク一覧 */}
+            {task.subtasks && task.subtasks.map((subtask) => (
+              <div key={subtask.id} className="subtask-item">
                 <button
-                  onClick={handleAddSubtask}
-                  disabled={!newSubtask.trim()}
-                  className="subtask-add-btn"
+                  className={`subtask-checkbox ${subtask.status ? 'completed' : ''}`}
+                  onClick={() => handleSubtaskStatusChange(subtask.id, subtask.status)}
                 >
-                  追加
+                  {subtask.status ? '✓' : '○'}
                 </button>
+                <span className={`subtask-title ${subtask.status ? 'completed' : ''}`}>
+                  {subtask.title}
+                </span>
               </div>
+            ))}
+
+            {/* サブタスク追加 */}
+            <div className="subtask-add">
+              <input
+                type="text"
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                placeholder="サブタスクを追加..."
+                className="subtask-input"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddSubtask();
+                  }
+                }}
+              />
+              <button
+                onClick={handleAddSubtask}
+                disabled={!newSubtask.trim()}
+                className="subtask-add-btn"
+              >
+                追加
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
