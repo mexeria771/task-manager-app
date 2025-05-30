@@ -112,13 +112,9 @@ function MarkdownManager({ tasks, categories, onDataChange }) {
         }
 
         // サブタスク（  - [x] または  - [ ]）
-        // eslint-disable-next-line no-regex-spaces
-        if (trimmedLine.match(/^  - \[(x| )\]/)) {
+        if (trimmedLine.startsWith('  - [x]') || trimmedLine.startsWith('  - [ ]')) {
           const isCompleted = trimmedLine.includes('[x]');
-          // eslint-disable-next-line no-regex-spaces
-          const title = trimmedLine
-            .replace(/^  - \[(x| )\]/, '')
-            .trim();
+          const title = trimmedLine.substring(7).trim(); // '  - [x] ' または '  - [ ] ' を除去
 
           if (currentTask) {
             currentTask.subtasks.push({
